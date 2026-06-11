@@ -20,14 +20,25 @@ Por quadro da câmera, cada rosto é classificado como **conhecido** (você) ou
 Reconhecimento de identidade via [`face_recognition`](https://github.com/ageitgey/face_recognition)
 (embeddings de 128 dimensões); overlay fullscreen via Tkinter.
 
-## Setup (em breve)
+## Uso
+
+Cadastro do rosto (uma vez):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python enroll.py     # cadastra seu rosto
-python guardian.py   # liga o guardião
+python capture.py    # tira fotos (ESPACO=foto, Q=sai)
+python enroll.py     # gera encodings.npy
 ```
 
-Requer permissão de **Câmera** para o Terminal em
+Ligar o guardião — o `start.sh` cuida da venv, das dependências e do
+check de cadastro automaticamente:
+
+```bash
+./start.sh
+```
+
+ESC esconde o alerta na hora; Ctrl+C encerra.
+
+Requer permissão de **Câmera** para o terminal em
 Ajustes do Sistema → Privacidade e Segurança.
