@@ -5,7 +5,7 @@ __pycache__/
 venv/
 
 # Dados sensíveis / gerados
-encodings.pkl
+encodings.npy
 known_faces/*.jpg
 known_faces/*.jpeg
 known_faces/*.png

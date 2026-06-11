@@ -1,0 +1,5 @@
+opencv-python>=4.9
+face_recognition>=1.3
+numpy>=1.26
+# face_recognition_models usa pkg_resources; setuptools>=81 o removeu (Python 3.14).
+setuptools<81
