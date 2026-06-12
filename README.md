@@ -43,6 +43,19 @@ ESC esconde o alerta na hora; Ctrl+C encerra.
 Requer permissão de **Câmera** para o terminal em
 Ajustes do Sistema → Privacidade e Segurança.
 
+> ⚠️ **Limitação conhecida:** a v1 não detecta vivacidade — mostrar uma **foto** do dono (no celular ou impressa) burla o reconhecimento. É dissuasão/brincadeira, não controle de acesso. Anti-spoofing no roadmap — ver [`docs/security.md`](docs/security.md).
+
+## Documentação
+
+| Doc | Para quê |
+|---|---|
+| [`CLAUDE.md`](CLAUDE.md) | Cheat-sheet: comandos, arquitetura, gotchas |
+| [`AGENTS.md`](AGENTS.md) | Regras de engenharia e convenções |
+| [`CHANGELOG.md`](CHANGELOG.md) | Histórico de mudanças |
+| [`docs/security.md`](docs/security.md) | Privacidade, biometria, spoofing |
+| [`docs/troubleshooting.md`](docs/troubleshooting.md) | Erros comuns + correções |
+| [`docs/superpowers/`](docs/superpowers/) | Design e plano de implementação |
+
 ## Licença
 
 [MIT](LICENSE) © gabdevbr
