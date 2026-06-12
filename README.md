@@ -42,3 +42,7 @@ ESC esconde o alerta na hora; Ctrl+C encerra.
 
 Requer permissão de **Câmera** para o terminal em
 Ajustes do Sistema → Privacidade e Segurança.
+
+## Licença
+
+[MIT](LICENSE) © gabdevbr
