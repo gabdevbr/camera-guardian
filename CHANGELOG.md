@@ -13,6 +13,7 @@ Mudanças notáveis do **Camera Guardian**. Formato baseado em [Keep a Changelog
 ## [Unreleased]
 
 ### Added
+- **Modo gorila 🦍.** `ALERT_MODE = "gorila"` mostra uma imagem fullscreen (`assets/gorila.webp`) em vez da frase, em todos os monitores. `"text"` mantém o "SAI DAI VAGABUNDO". Fallback automático pra texto se Pillow/imagem faltar.
 - **Liveness por piscada (anti-spoofing).** `liveness.py` (`eye_aspect_ratio` + `BlinkTracker`, 8 testes). O dono só limpa o alerta se piscou recentemente — foto estática não pisca e é barrada. Risco residual documentado: replay de vídeo.
 - **Overlay multi-monitor.** Alerta vermelho aparece em **todos os monitores** (um `Toplevel` por tela via `screeninfo`), com fallback pra tela única.
 

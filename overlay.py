@@ -1,4 +1,5 @@
-# overlay.py — alerta vermelho fullscreen em TODOS os monitores; polling de um callback bool.
+# overlay.py — alerta fullscreen em TODOS os monitores; modo "text" (frase) ou "gorila" (imagem).
+import os
 import tkinter as tk
 import config
 
@@ -6,6 +7,11 @@ try:
     from screeninfo import get_monitors
 except Exception:  # screeninfo ausente ou sem backend → cai pra tela única
     get_monitors = None
+
+try:
+    from PIL import Image, ImageTk
+except Exception:  # Pillow ausente → modo gorila cai pra texto
+    Image = ImageTk = None
 
 
 class Overlay:
@@ -15,8 +21,35 @@ class Overlay:
         self.root = tk.Tk()
         self.root.withdraw()  # root invisível; cada monitor é um Toplevel
         self.root.bind("<Escape>", lambda e: self._hide())
+
+        self._photos = []  # mantém refs vivas (Tkinter coleta PhotoImage senão)
+        self.mode = config.ALERT_MODE
+        self._image = self._load_image() if self.mode == "gorila" else None
+        if self.mode == "gorila" and self._image is None:
+            self.mode = "text"  # fallback se Pillow/imagem indisponível
+
         self.windows = [self._make_window(geom) for geom in self._monitor_geometries()]
         self._visible = False
+
+    def _load_image(self):
+        if Image is None:
+            return None
+        path = config.ALERT_IMAGE
+        if not os.path.isabs(path):
+            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
+        try:
+            return Image.open(path).convert("RGB")
+        except Exception:
+            return None
+
+    def _cover_image(self, w, h):
+        """Redimensiona a imagem p/ COBRIR (w, h), cortando o excesso (centralizado)."""
+        iw, ih = self._image.size
+        scale = max(w / iw, h / ih)
+        nw, nh = max(w, int(iw * scale)), max(h, int(ih * scale))
+        img = self._image.resize((nw, nh), Image.LANCZOS)
+        left, top = (nw - w) // 2, (nh - h) // 2
+        return img.crop((left, top, left + w, top + h))
 
     def _monitor_geometries(self):
         """Lista de (w, h, x, y) por monitor. Cai pra tela primária se não der."""
@@ -37,11 +70,19 @@ class Overlay:
         win.configure(bg=config.ALERT_BG)
         win.attributes("-topmost", True)
         win.bind("<Escape>", lambda e: self._hide())
-        tk.Label(
-            win, text=config.ALERT_TEXT, fg=config.ALERT_FG, bg=config.ALERT_BG,
-            font=("Helvetica", config.ALERT_FONT_SIZE, "bold"),
-            wraplength=max(1, w - 80),
-        ).pack(expand=True, fill="both")
+
+        if self.mode == "gorila":
+            photo = ImageTk.PhotoImage(self._cover_image(w, h))
+            self._photos.append(photo)      # ref viva
+            tk.Label(win, image=photo, bg=config.ALERT_BG, borderwidth=0).pack(
+                expand=True, fill="both")
+        else:
+            tk.Label(
+                win, text=config.ALERT_TEXT, fg=config.ALERT_FG, bg=config.ALERT_BG,
+                font=("Helvetica", config.ALERT_FONT_SIZE, "bold"),
+                wraplength=max(1, w - 80),
+            ).pack(expand=True, fill="both")
+
         win.withdraw()
         return win
 

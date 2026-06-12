@@ -17,6 +17,10 @@ LIVENESS_RESET_ABSENT = 5     # quadros sem o dono p/ zerar a vivacidade (exige 
 ENCODINGS_PATH = "encodings.npy"
 KNOWN_FACES_DIR = "known_faces"
 
+# Modo do alerta: "text" (frase) ou "gorila" (imagem fullscreen no lugar da frase)
+ALERT_MODE = "gorila"
+ALERT_IMAGE = "assets/gorila.webp"
+
 ALERT_TEXT = "SAI DAI VAGABUNDO"
 ALERT_BG = "#cc0000"     # vermelho
 ALERT_FG = "#ffffff"     # texto branco

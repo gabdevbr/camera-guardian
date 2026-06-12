@@ -36,8 +36,9 @@ camera-guardian/
   detector.py            # câmera + reconhecimento + liveness; read_counts() -> (known, unknown)
   capture.py             # ferramenta manual de fotos (webcam)
   enroll.py              # known_faces/* -> encodings.npy
-  overlay.py             # alerta Tkinter fullscreen vermelho em TODOS os monitores
+  overlay.py             # alerta fullscreen em TODOS os monitores: modo "text" ou "gorila"
   guardian.py            # orquestra detector(thread) + state + overlay(main)
+  assets/gorila.webp     # imagem do modo "gorila" (ALERT_MODE)
   start.sh               # launcher: venv + deps + check + guardian
   tests/test_state.py    # 8 testes da máquina de estados
   tests/test_liveness.py # 8 testes do EAR + BlinkTracker

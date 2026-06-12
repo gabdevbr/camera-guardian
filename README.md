@@ -120,6 +120,7 @@ Tudo ajustável em [`config.py`](./config.py):
 | `DEBOUNCE_FRAMES` | `3` | Quadros consecutivos p/ trocar de estado (anti-flicker) |
 | `DOWNSCALE` | `0.25` | Redução do quadro antes da detecção (menor = mais rápido) |
 | `DETECTION_MODEL` | `"hog"` | `"hog"` (CPU) ou `"cnn"` (GPU) |
+| `ALERT_MODE` | `"gorila"` | `"gorila"` (imagem fullscreen 🦍) ou `"text"` (a frase) |
 | `EAR_THRESHOLD` | `0.21` | Abaixo disso o olho conta como fechado |
 | `LIVENESS_WINDOW_FRAMES` | `45` | Por quantos quadros uma piscada mantém você "vivo" |
 | `LIVENESS_RESET_ABSENT` | `5` | Quadros sem o dono p/ exigir nova piscada |
