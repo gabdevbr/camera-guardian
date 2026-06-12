@@ -32,21 +32,24 @@ Não há porta de rede, endpoint nem entrada de usuário remota. O único vetor 
 
 ---
 
-## ⚠️ Limitação conhecida: spoofing por foto (sem liveness)
+## Anti-spoofing: liveness por piscada
 
-A v1 **não detecta vivacidade** (*liveness*). O reconhecimento compara embeddings — uma **foto do dono** (impressa ou na tela de um celular) gera um embedding parecido o suficiente e **burla o guardião**: ele trata a foto como o dono e não dispara.
+O reconhecimento sozinho compara só *aparência* — uma **foto do dono** (impressa ou na tela do celular) gera um embedding parecido e burlaria o guardião. Por isso o dono só conta como presente se estiver **vivo**.
 
-**Impacto:** qualquer pessoa com uma foto sua consegue desarmar o alerta.
+**Mitigação ativa (implementada):** detecção de piscada via **EAR** (Eye Aspect Ratio) sobre os landmarks dos olhos (`liveness.py`). O dono só "limpa" o alerta se piscou dentro de `LIVENESS_WINDOW_FRAMES` quadros. Uma foto estática **não pisca** → nunca é tratada como o dono vivo → não desarma o alerta. A vivacidade ainda **zera** quando o dono some por alguns quadros (`LIVENESS_RESET_ABSENT`), pra uma foto não "herdar" a piscada que o dono real deixou.
 
-**Mitigação na v1:** nenhuma efetiva. Reduzir `TOLERANCE` (ex.: `0.5`) torna o match mais rígido e às vezes atrapalha fotos de baixa qualidade, mas **não** resolve — uma foto boa ainda passa.
+**Custo de UX:** quando o dono chega, há ~1-2s de vermelho até a primeira piscada (todo mundo pisca involuntariamente em segundos).
 
-**Hardening planejado (anti-spoofing / liveness):**
-- **Detecção de piscada / micro-movimento** entre quadros (foto estática não pisca).
-- **Análise de textura / moiré** pra distinguir pele de tela de celular (LBP, frequência).
-- **Challenge-response** (ex.: "vire a cabeça") quando há dúvida.
-- **Profundidade** se houver câmera com sensor de depth.
+### Risco residual (não coberto)
 
-Enquanto não houver liveness, trate o guardião como **dissuasão/brincadeira**, não controle de acesso real.
+- **Replay de vídeo do dono** — um vídeo (no celular) onde o dono pisca pode passar pela detecção de piscada. Defesas mais fortes (textura/moiré anti-tela, challenge-response, profundidade) ficam pro futuro.
+- Tratar o guardião como **dissuasão forte**, não controle de acesso de nível bancário.
+
+### Hardening futuro
+
+- Análise de textura / moiré pra distinguir pele de tela de celular (LBP, frequência).
+- Challenge-response ("vire a cabeça") quando há dúvida.
+- Profundidade, se houver câmera com sensor de depth.
 
 ---
 

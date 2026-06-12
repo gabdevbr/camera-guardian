@@ -30,15 +30,17 @@ Fluxo: `câmera → detector (known/unknown por quadro) → GuardianState (debou
 
 ```
 camera-guardian/
-  config.py            # tunables (tolerance, debounce, downscale, textos)
-  state.py             # GuardianState — máquina de estados pura (testada)
-  detector.py          # câmera + reconhecimento; read_counts() -> (known, unknown)
-  capture.py           # ferramenta manual de fotos (webcam)
-  enroll.py            # known_faces/* -> encodings.npy
-  overlay.py           # janela Tkinter fullscreen vermelha
-  guardian.py          # orquestra detector(thread) + state + overlay(main)
-  start.sh             # launcher: venv + deps + check + guardian
-  tests/test_state.py  # 8 testes da máquina de estados
+  config.py              # tunables (tolerance, debounce, downscale, liveness, textos)
+  state.py               # GuardianState — máquina de estados pura (testada)
+  liveness.py            # EAR + BlinkTracker — anti-spoofing por piscada (puro, testado)
+  detector.py            # câmera + reconhecimento + liveness; read_counts() -> (known, unknown)
+  capture.py             # ferramenta manual de fotos (webcam)
+  enroll.py              # known_faces/* -> encodings.npy
+  overlay.py             # alerta Tkinter fullscreen vermelho em TODOS os monitores
+  guardian.py            # orquestra detector(thread) + state + overlay(main)
+  start.sh               # launcher: venv + deps + check + guardian
+  tests/test_state.py    # 8 testes da máquina de estados
+  tests/test_liveness.py # 8 testes do EAR + BlinkTracker
   known_faces/         # fotos do dono (gitignored)
   encodings.npy        # cache de embeddings (gitignored, gerado por enroll.py)
   docs/superpowers/    # design + plano de implementação
@@ -46,17 +48,21 @@ camera-guardian/
 
 ## Comportamento (regra de produto)
 
-Por quadro, prioridade: **UNKNOWN > KNOWN > vazio (latch)**.
-1. Rosto desconhecido → 🟥 alerta (intruso sempre ganha, mesmo com o dono junto).
-2. Só o dono → 🟩 limpa.
-3. Quadro vazio → mantém o estado atual (continua vermelho até o dono voltar).
+Por quadro, prioridade: **DONO-VIVO > AMEAÇA > vazio (latch)**.
+1. **Dono vivo presente** (reconhecido **e** piscou recentemente) → 🟩 limpa. Tem prioridade máxima: **não dispara nem com gente passando atrás**. O guardião protege quando o dono **sai**.
+2. Senão, **ameaça** — rosto desconhecido **ou** o dono sem vivacidade (possível foto) → 🟥 alerta.
+3. Quadro vazio → mantém o estado atual (continua vermelho até o dono vivo voltar).
 
 Debounce: a troca de estado exige `DEBOUNCE_FRAMES` quadros consecutivos concordando (mata flicker).
 
+**Liveness (anti-spoofing):** o dono só conta como "vivo" se piscou nos últimos `LIVENESS_WINDOW_FRAMES` quadros (EAR via landmarks dos olhos). Uma foto não pisca → nunca limpa. Custo: ~1-2s de vermelho quando o dono chega, até a primeira piscada.
+
 ## Key Patterns
 
-- **Máquina de estados pura** (`state.py`) — sem dependência de câmera/GUI, 100% testável; toda a lógica de decisão mora aqui.
+- **Lógica pura isolada e testável** — `state.py` (decisão) e `liveness.py` (EAR + piscada) não dependem de câmera/GUI; toda a regra de negócio mora aí e é coberta por testes.
+- **Liveness alimenta a máquina de estados** — o `detector` aplica reconhecimento + piscada e traduz cada quadro em `(dono_vivo, ameaça)`; o `state.py` só vê esses dois números (não muda quando a regra de liveness muda).
 - **Threading detector(bg) / overlay(main)** — Tkinter só funciona na main thread; o detector publica o estado via `Lock`.
+- **Overlay multi-monitor** — um `Toplevel` vermelho por tela (geometria via `screeninfo`), com fallback pra tela única.
 - **Embeddings em `.npy`, não pickle** — `np.load`/`np.save` (sem execução de código arbitrário); fonte é local e confiável, mas `.npy` é o formato seguro e natural pra arrays (N,128).
 
 ## Gotchas

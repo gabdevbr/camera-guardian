@@ -2,7 +2,14 @@
 class GuardianState:
     """Máquina de estados do guardião.
 
-    Prioridade por quadro: UNKNOWN > KNOWN > (vazio = mantém estado / latch).
+    Entradas por quadro (vindas do detector, já com liveness aplicado):
+      - `known`   = dono VIVO presente? (1/0)
+      - `unknown` = ameaça presente? desconhecido OU dono-não-vivo/foto (1/0)
+
+    Prioridade: KNOWN (dono vivo) > UNKNOWN (ameaça) > (vazio = mantém / latch).
+    Ou seja: se o dono vivo está na tela, NÃO dispara — nem com gente passando
+    atrás. O alerta só sobe quando o dono está ausente e há ameaça.
+
     Debounce: só troca de estado após `debounce_frames` quadros consecutivos
     concordando com o novo alvo (mata o flicker da detecção).
     """
@@ -14,10 +21,10 @@ class GuardianState:
         self._count = 0
 
     def update(self, known, unknown):
-        if unknown > 0:
-            target = True
-        elif known > 0:
-            target = False
+        if known > 0:
+            target = False        # dono vivo presente -> limpa (prioridade máxima)
+        elif unknown > 0:
+            target = True         # dono ausente + ameaça -> alerta
         else:
             target = self.alert_active  # quadro vazio: latch no estado atual
 

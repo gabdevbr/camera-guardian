@@ -19,28 +19,34 @@ Diretrizes para agentes de IA e contribuidores neste repositório. **Camera Guar
 |---|---|---|---|
 | Config | `config.py` | Tunables | — |
 | Decisão | `state.py` | Máquina de estados pura | — (testável) |
-| Percepção | `detector.py` | Câmera + reconhecimento → `(known, unknown)` | OpenCV, face_recognition |
+| Liveness | `liveness.py` | EAR + `BlinkTracker` (anti-spoofing) | — (testável) |
+| Percepção | `detector.py` | Câmera + reconhecimento + liveness → `(known, unknown)` | OpenCV, face_recognition |
 | Cadastro | `capture.py`, `enroll.py` | Fotos do dono → `encodings.npy` | OpenCV / face_recognition, numpy |
-| Apresentação | `overlay.py` | Janela Tkinter vermelha | Tkinter |
+| Apresentação | `overlay.py` | Alerta Tkinter vermelho em todos os monitores | Tkinter, screeninfo |
 | Orquestração | `guardian.py` | Cola tudo (thread + main) | os acima |
 
 **Invariantes:**
-- `state.py` **não importa** OpenCV, Tkinter ou numpy. Lógica pura, sem I/O. É a fronteira testável — não a contamine.
+- `state.py` e `liveness.py` **não importam** OpenCV nem Tkinter. Lógica pura, sem I/O. São a fronteira testável — não as contamine. (`liveness.py` só lê `config` p/ defaults.)
 - Tkinter roda **só na main thread**. O detector roda em thread de fundo e publica o estado por trás de um `Lock`. Nunca toque em widgets Tk fora da main thread.
 - Embeddings persistem em `.npy` (numpy), **nunca pickle**.
+- O `detector` é o **único** lugar que junta reconhecimento + liveness e traduz pra `(known, unknown)`. A máquina de estados não sabe o que é "vivo" — só recebe os dois números.
 
 ---
 
 ## 3. Comportamento (contrato da máquina de estados)
 
-Prioridade por quadro: **UNKNOWN > KNOWN > vazio (latch no estado atual)**. Debounce de `DEBOUNCE_FRAMES` quadros consecutivos pra trocar. Qualquer mudança em `state.py` **precisa** manter os 8 testes verdes e adicionar testes pros novos casos.
+Prioridade por quadro: **KNOWN (dono vivo) > UNKNOWN (ameaça) > vazio (latch)**. Onde `known`/`unknown` que chegam ao `state.py` já vêm com liveness aplicado pelo detector:
+- `known = 1` ⟺ dono reconhecido **e** vivo (piscou dentro de `LIVENESS_WINDOW_FRAMES`).
+- `unknown = 1` ⟺ rosto desconhecido **ou** dono sem vivacidade (possível foto).
+
+Regra de produto: **se o dono vivo está na tela, não dispara** — nem com terceiros passando atrás. O alerta sobe só quando o dono está ausente e há ameaça. Debounce de `DEBOUNCE_FRAMES` quadros pra trocar. Qualquer mudança em `state.py` ou `liveness.py` **precisa** manter os 16 testes verdes e adicionar testes pros novos casos.
 
 ---
 
 ## 4. Testes
 
-- **Regra:** toda lógica tem teste. A lógica de decisão está isolada em `state.py` justamente pra ser 100% testável sem hardware.
-- **Cobertura mínima:** `state.py` em 100% de branches. Câmera/GUI (`detector`, `overlay`, `capture`) são smoke-test manual (dependem de webcam/tela) — documentar o passo manual no PR.
+- **Regra:** toda lógica tem teste. A decisão (`state.py`) e o liveness (`liveness.py`) estão isolados de hardware justamente pra serem 100% testáveis.
+- **Cobertura mínima:** `state.py` e `liveness.py` em 100% de branches. Câmera/GUI (`detector`, `overlay`, `capture`) são smoke-test manual (dependem de webcam/tela) — documentar o passo manual no PR.
 - **Rodar:**
   ```bash
   PYTHONPATH=. python -m pytest tests/ -v
@@ -50,12 +56,12 @@ Prioridade por quadro: **UNKNOWN > KNOWN > vazio (latch no estado atual)**. Debo
 
 ## 5. Checklist de auto-revisão (antes de entregar)
 
-- [ ] `state.py` continua puro (sem import de cv2/tkinter/numpy)?
+- [ ] `state.py` e `liveness.py` continuam puros (sem import de cv2/tkinter)?
 - [ ] Nenhum acesso a widget Tk fora da main thread?
 - [ ] Novos tunables foram pra `config.py` (sem hardcode)?
-- [ ] Edge cases de hardware tratados (sem câmera, sem permissão, quadro `None`, sem rosto)?
-- [ ] `PYTHONPATH=. python -m pytest tests/ -v` passa?
-- [ ] Novos comportamentos da máquina de estados têm teste?
+- [ ] Edge cases de hardware tratados (sem câmera, sem permissão, quadro `None`, sem rosto, sem olhos)?
+- [ ] `PYTHONPATH=. python -m pytest tests/ -v` passa (16 testes)?
+- [ ] Novos comportamentos de decisão/liveness têm teste?
 - [ ] Nenhum dado biométrico (`known_faces/`, `encodings.npy`) entrou no commit?
 - [ ] Commit em Conventional Commits?
 
@@ -77,7 +83,7 @@ Imports: stdlib → terceiros → `config`/locais. Documentação e comentários
 
 ## 7. Segurança & privacidade
 
-Este app processa **biometria** (rostos) e mantém a câmera aberta. Regras invioláveis em [`docs/security.md`](./docs/security.md): nada de dados biométricos no git; processamento 100% local; nenhuma imagem ou embedding sai da máquina.
+Este app processa **biometria** (rostos) e mantém a câmera aberta. Regras invioláveis em [`docs/security.md`](./docs/security.md): nada de dados biométricos no git; processamento 100% local; nenhuma imagem ou embedding sai da máquina. **Anti-spoofing:** liveness por piscada derruba foto estática; risco residual = vídeo do dono (replay) — ver `docs/security.md`.
 
 ---
 

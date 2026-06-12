@@ -74,9 +74,28 @@ O dono está sendo lido como desconhecido. Tente:
 1. Apertar o limiar: `TOLERANCE = 0.5`.
 2. Se o alerta "tremer" (liga/desliga), suba `DEBOUNCE_FRAMES = 5`.
 
-### ⚠️ Burlam mostrando uma FOTO minha (impressa ou no celular)
+### Fica vermelho até eu piscar quando chego
 
-**Não é bug — é limitação da v1.** O reconhecimento não detecta vivacidade (*liveness*), então uma foto do dono passa como o dono. Apertar `TOLERANCE` **não** resolve de forma confiável. A solução real é anti-spoofing (piscada/movimento, textura/moiré, challenge-response) — ver roadmap em [`security.md`](security.md#️-limitação-conhecida-spoofing-por-foto-sem-liveness). Até lá, trate o guardião como dissuasão/brincadeira, não controle de acesso.
+**Esperado.** O liveness exige uma piscada recente pra considerar o dono "vivo"; até a primeira piscada (~1-2s) o quadro fica vermelho. Para reduzir, aumente `LIVENESS_WINDOW_FRAMES` em `config.py` (a piscada "vale" por mais tempo) — mas não exagere, ou uma foto ganha mais folga.
+
+### Burlam mostrando uma FOTO minha (impressa ou no celular)
+
+**Já mitigado.** A detecção de piscada (`liveness.py`) derruba foto estática: ela não pisca, então nunca é tratada como o dono vivo e não desarma o alerta. Se ainda passar, a piscada não está sendo detectada — ver entrada abaixo. Risco residual = **vídeo** do dono (replay); ver [`security.md`](security.md#anti-spoofing-liveness-por-piscada).
+
+### Piscada não é detectada (não fico "vivo" mesmo piscando)
+
+Os olhos podem estar pequenos/escuros demais pro EAR. Tente:
+1. Mais luz no rosto; tire óculos escuros.
+2. Reduzir `DOWNSCALE` em `config.py` (ex.: `0.4`) — landmarks mais precisos, ao custo de FPS.
+3. Subir levemente `EAR_THRESHOLD` (ex.: `0.23`) se as piscadas não cruzam o limiar.
+
+### Alerta só aparece em 1 monitor
+
+Falta o `screeninfo` ou ele não enumerou as telas. Cheque:
+```bash
+python -c "from screeninfo import get_monitors; print(get_monitors())"
+```
+Sem ele, o overlay cai pra tela primária. Reinstale: `pip install screeninfo`.
 
 ---
 

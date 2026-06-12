@@ -13,10 +13,10 @@ def test_desconhecido_dispara_apos_debounce():
     assert s.update(known=0, unknown=1) is True    # quadro 3 -> dispara
 
 
-def test_desconhecido_tem_prioridade_sobre_dono():
-    s = GuardianState(debounce_frames=1)
-    # dono + intruso no mesmo quadro -> intruso ganha
-    assert s.update(known=1, unknown=1) is True
+def test_dono_vivo_tem_prioridade_sobre_ameaca():
+    s = GuardianState(debounce_frames=1, start_alert=True)
+    # dono vivo + ameaça no mesmo quadro (gente passando atrás) -> dono ganha, limpa
+    assert s.update(known=1, unknown=1) is False
 
 
 def test_dono_limpa_apos_debounce():

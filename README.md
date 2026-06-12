@@ -10,15 +10,15 @@ reaparece, o alerta some.
 
 ## Como funciona
 
-Por quadro da câmera, cada rosto é classificado como **conhecido** (você) ou
-**desconhecido**:
+Por quadro da câmera:
 
-1. Rosto desconhecido → 🟥 alerta vermelho
-2. Sua cara → 🟩 limpa
-3. Quadro vazio → mantém o estado (continua vermelho até você voltar)
+1. **Você, vivo** (reconhecido **e** piscando) → 🟩 limpa. Prioridade máxima: **não dispara nem com gente passando atrás** — o guardião protege quando você **sai**.
+2. Senão, **ameaça** — rosto desconhecido **ou** uma foto sua (não pisca) → 🟥 alerta vermelho em **todos os monitores**.
+3. Quadro vazio → mantém o estado (continua vermelho até você, vivo, voltar).
 
-Reconhecimento de identidade via [`face_recognition`](https://github.com/ageitgey/face_recognition)
-(embeddings de 128 dimensões); overlay fullscreen via Tkinter.
+Reconhecimento via [`face_recognition`](https://github.com/ageitgey/face_recognition)
+(embeddings de 128d) + **liveness por piscada** (EAR) como anti-spoofing; overlay
+multi-monitor via Tkinter + `screeninfo`.
 
 ## Uso
 
@@ -43,7 +43,7 @@ ESC esconde o alerta na hora; Ctrl+C encerra.
 Requer permissão de **Câmera** para o terminal em
 Ajustes do Sistema → Privacidade e Segurança.
 
-> ⚠️ **Limitação conhecida:** a v1 não detecta vivacidade — mostrar uma **foto** do dono (no celular ou impressa) burla o reconhecimento. É dissuasão/brincadeira, não controle de acesso. Anti-spoofing no roadmap — ver [`docs/security.md`](docs/security.md).
+> ⚠️ **Anti-spoofing:** foto estática do dono é barrada pela detecção de piscada. Risco residual = **vídeo** (replay) do dono. É dissuasão forte, não controle de acesso bancário — ver [`docs/security.md`](docs/security.md).
 
 ## Documentação
 

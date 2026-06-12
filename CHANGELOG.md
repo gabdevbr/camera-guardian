@@ -12,8 +12,15 @@ Mudanças notáveis do **Camera Guardian**. Formato baseado em [Keep a Changelog
 
 ## [Unreleased]
 
+### Added
+- **Liveness por piscada (anti-spoofing).** `liveness.py` (`eye_aspect_ratio` + `BlinkTracker`, 8 testes). O dono só limpa o alerta se piscou recentemente — foto estática não pisca e é barrada. Risco residual documentado: replay de vídeo.
+- **Overlay multi-monitor.** Alerta vermelho aparece em **todos os monitores** (um `Toplevel` por tela via `screeninfo`), com fallback pra tela única.
+
+### Changed
+- **Prioridade invertida: dono-vivo > ameaça.** Se o dono vivo está na tela, o alerta **não** dispara — nem com terceiros passando atrás. O alerta só sobe quando o dono está ausente. (Antes: desconhecido tinha prioridade.) `state.py` atualizado; teste de prioridade invertido.
+
 ### Conhecido / em aberto
-- **Spoofing por foto.** Mostrar uma foto do dono (impressa ou na tela do celular) burla o reconhecimento — a v1 não tem detecção de vivacidade (*liveness*). Ver [`docs/security.md`](./docs/security.md) e [`docs/troubleshooting.md`](./docs/troubleshooting.md). Anti-spoofing planejado.
+- **Replay de vídeo.** Um vídeo do dono piscando pode passar pela detecção de piscada. Hardening (textura/moiré, challenge-response, profundidade) no roadmap — ver [`docs/security.md`](./docs/security.md).
 
 ---
 

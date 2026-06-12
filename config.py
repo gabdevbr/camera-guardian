@@ -8,6 +8,12 @@ DETECTION_MODEL = "hog"  # "hog" (CPU, rápido) ou "cnn" (GPU, preciso)
 CAMERA_INDEX = 0
 POLL_MS = 100            # intervalo de polling do overlay (ms)
 
+# Liveness / anti-spoofing por piscada (EAR = Eye Aspect Ratio)
+EAR_THRESHOLD = 0.21          # abaixo disso o olho conta como FECHADO
+BLINK_CONSEC_FRAMES = 1       # quadros fechados consecutivos p/ contar 1 piscada
+LIVENESS_WINDOW_FRAMES = 45   # por quantos quadros uma piscada mantém o dono "vivo"
+LIVENESS_RESET_ABSENT = 5     # quadros sem o dono p/ zerar a vivacidade (exige nova piscada)
+
 ENCODINGS_PATH = "encodings.npy"
 KNOWN_FACES_DIR = "known_faces"
 

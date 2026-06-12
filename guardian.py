@@ -4,15 +4,23 @@ import config
 from detector import Detector
 from state import GuardianState
 from overlay import Overlay
+from liveness import BlinkTracker
 
 
 def main():
+    blink = BlinkTracker(
+        ear_threshold=config.EAR_THRESHOLD,
+        consec_frames=config.BLINK_CONSEC_FRAMES,
+        window_frames=config.LIVENESS_WINDOW_FRAMES,
+        reset_absent_frames=config.LIVENESS_RESET_ABSENT,
+    )
     detector = Detector(
         config.ENCODINGS_PATH,
         config.CAMERA_INDEX,
         config.DOWNSCALE,
         config.DETECTION_MODEL,
         config.TOLERANCE,
+        blink_tracker=blink,
     )
     state = GuardianState(debounce_frames=config.DEBOUNCE_FRAMES)
     stop = threading.Event()
